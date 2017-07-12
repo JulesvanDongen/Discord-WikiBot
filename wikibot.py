@@ -1,12 +1,19 @@
+import constants
+import discord
 import logging
+import asyncio
+import command
+import sys
+
+assert sys.version_info >= (3,5)
+
+# initialize logger
 
 logging.basicConfig(level=logging.INFO)
 
-import constants
-import discord
-import asyncio
-
 client = discord.Client()
+
+dict = command.commandDict
 
 @client.event
 async def on_ready():
@@ -17,11 +24,18 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-	if message.content.startswith('!wiki'):
-		print('message sent') # do things
-	elif message.content.startswith('!help'):
-		
-
-
-
+	if message.content.startswith('!'):
+		splitmessage = message.content[1:].split(' ', 1)
+		try:
+			cmd = dict[splitmessage[0]]
+			
+			if cmd is not None:
+				args = ''
+				if (len(splitmessage) > 1):
+					args = splitmessage[1]
+					
+				await cmd.execute(client, message, args)
+		except KeyError:
+			print('KeyError caught during on_message')
+			
 client.run(constants.token)

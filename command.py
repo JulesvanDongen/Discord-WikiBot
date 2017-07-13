@@ -3,6 +3,8 @@ import discord
 import asyncio
 import wikipedia
 
+commandchar = '!'
+
 class Command:
 	__metaclass__ = abc.ABCMeta
 	
@@ -32,7 +34,7 @@ class HelpCommand(Command):
 		
 		for command in commands: 
 			for name in command.names():
-				content += '!'
+				content += commandchar
 				content += name
 				content += ' '
 			content += '\t'
@@ -44,7 +46,7 @@ class HelpCommand(Command):
 		await client.send_message(message.channel, embed=emb)
 		
 	def names(self):
-		return ['help']
+		return ['help', 'h']
 		
 class WikiCommand(Command):
 	def help(self):
@@ -67,7 +69,7 @@ class WikiCommand(Command):
 			
 			await client.delete_message(tmp)
 		except wikipedia.exceptions.DisambiguationError as de:
-			title = arg
+			title = de.title
 			title += ' may refer to:\n'
 			
 			content = ''
@@ -77,7 +79,7 @@ class WikiCommand(Command):
 					content += option
 					content += '\n'
 					
-			emb = discord.Embed(title=de.title, description=content)
+			emb = discord.Embed(title=title, description=content)
 			await client.delete_message(tmp)
 			await client.send_message(message.channel, embed=emb)
 		except wikipedia.exceptions.PageError as pe:
@@ -87,12 +89,12 @@ class WikiCommand(Command):
 			
 			await client.edit_message(tmp, string)
 	def names(self):
-		return ['wiki']
+		return ['wiki', 'w']
 		
 		
 class CleanCommand(Command):
 	def help(self):
-		return 'Cleans the chat of the commands. This requires the Manage Messages permission.'
+		return 'Cleans the chat of the commands. This requires the Manage Messages permission and can only be done in Server Text Channels.'
 		
 	async def execute(self, client, message, arg):
 	
@@ -101,16 +103,14 @@ class CleanCommand(Command):
 				
 		def delete_commands(message):
 			try:
-				return (message.content.startswith('!') and commandDict[message.content[1:].split(' ', 1)[0]] is not None)
+				return (message.content.startswith(commandchar) and commandDict[message.content[len(commandchar):].split(' ', 1)[0]] is not None)
 			except KeyError:
 				return False
 				
 		try:
 			if arg.startswith('all'):
-				print('everything will be deleted')
 				deleted = await client.purge_from(message.channel, check=delete_all)
 			else:
-				print('only inputs are deleted')
 				deleted = await client.purge_from(message.channel, check=delete_commands)
 		except discord.Forbidden as forbidden:
 			await client.send_message(message.channel, 'Could not delete the data, possibly because of not having enough permissions')

@@ -7,8 +7,6 @@ import sys
 
 assert sys.version_info >= (3,5)
 
-# initialize logger
-
 logging.basicConfig(level=logging.INFO)
 
 client = discord.Client()
@@ -24,8 +22,8 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-	if message.content.startswith('!'):
-		splitmessage = message.content[1:].split(' ', 1)
+	if message.content.startswith(command.commandchar):
+		splitmessage = message.content[len(command.commandchar):].split(' ', 1)
 		try:
 			cmd = dict[splitmessage[0]]
 			
